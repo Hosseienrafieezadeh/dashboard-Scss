@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -12,101 +11,92 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { PasswordInput } from "@/components/ui/password-input";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
 import { PersonStandingIcon } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/router";
+
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useAuth } from "@/context/auth-context";
+
+// Validation schema for phone number
 const formSchema = z.object({
-  email: z.string().email(),
-  password: z.string(),
+  phone: z
+    .string()
+    .min(10, { message: "Phone number must be at least 10 digits" })
+    .max(20, { message: "Phone number cannot exceed 20 digits" }),
 });
+
 export default function LoginPage() {
+  const { login } = useAuth();
   const router = useRouter();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      phone: "",
     },
   });
 
-  const handleSubmit = (data: z.infer<typeof formSchema>) => {
-    console.log("login validation passed");
-    router.push("/dashboard");
+  const handleSubmit = async (data: z.infer<typeof formSchema>) => {
+    try {
+      await login(data.phone);
+      router.push("/dashboard");
+    } catch (err) {
+      form.setError("phone", {
+        type: "manual",
+        message: "Login failed. Please try again.",
+      });
+    }
   };
+
   return (
-    <>
+    <div className="flex flex-col items-center justify-center min-h-screen space-y-6">
       <PersonStandingIcon size={50} />
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Login</CardTitle>
-          <CardDescription>Log in to your SupportMe account</CardDescription>
+          <CardDescription>Enter your mobile phone number</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form
-              className="flex flex-col gap-4"
               onSubmit={form.handleSubmit(handleSubmit)}
+              className="flex flex-col gap-4"
             >
               <FormField
                 control={form.control}
-                name="email"
+                name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Mobile Phone</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="john@doe.com"
-                        type="email"
-                        {...field}
-                      />
+                      <Input placeholder="e.g. 09123456789" {...field} />
                     </FormControl>
-                    <FormDescription>
-                      This is the email address your signed up to SupportMe with
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <PasswordInput
-                        placeholder="Password"
-                        type="password"
-                        {...field}
-                      />
-                    </FormControl>
-
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit">Login</Button>
+              <Button type="submit" className="w-full">
+                Login
+              </Button>
             </form>
           </Form>
         </CardContent>
         <CardFooter className="justify-between">
-          <small>Dont have a account?</small>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/sign-up">Sign up</Link>
+          <small>Dont have an account?</small>
+          <Button variant="outline" disabled>
+            Sign up
           </Button>
         </CardFooter>
       </Card>
-    </>
+    </div>
   );
 }

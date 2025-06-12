@@ -1,19 +1,28 @@
 "use client";
 
+import { useAuth } from "@/context/auth-context";
+import { redirect } from "next/navigation";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { useState } from "react";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import MainMenu from "./components/main-menu";
 import MenuTitle from "./components/menu-title";
 import { MenuIcon } from "lucide-react";
-import { useMediaQuery } from "@/hooks/use-media-query";
-import { useState } from "react";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) redirect("/login");
 
+  return <AuthenticatedLayout>{children}</AuthenticatedLayout>;
+}
+
+function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  const isDesktop = useMediaQuery("(min-width: 768px)");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -37,8 +46,17 @@ export default function DashboardLayout({
           </Drawer>
         </div>
       )}
-      <div className="overflow-auto py-2 px-4">
-        <h1 className="pb-4">Welcome back, Tom!</h1>
+      <div className="overflow-auto py-4 px-4 space-y-4">
+        <div className="flex items-center gap-4">
+          <img
+            src={user?.picture?.large ?? "/default-avatar.png"}
+            alt="avatar"
+            className="w-12 h-12 rounded-full"
+          />
+          <h1 className="text-xl font-semibold">
+            سلام، {user?.name.first} {user?.name.last} عزیز 👋
+          </h1>
+        </div>
         {children}
       </div>
     </div>

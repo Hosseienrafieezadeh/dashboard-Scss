@@ -1,12 +1,21 @@
+"use client";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import MenuItem from "./menu-item";
 import MenuTitle from "./menu-title";
-import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 import { LightDarckToggle } from "@/components/ui/light-dark-toggle";
+import { useAuth } from "@/context/auth-context";
 
 export default function MainMenu({ className }: { className?: string }) {
+  const { logout } = useAuth();
+
+  function handleLogout() {
+    localStorage.clear(); // Clear localStorage
+    logout(); // Clear user context
+    window.location.href = "/login"; // Force full reload and redirect
+  }
+
   return (
     <nav
       className={cn(`md:bg-muted overflow-auto p-4 flex flex-col`, className)}
@@ -27,9 +36,12 @@ export default function MainMenu({ className }: { className?: string }) {
             TP
           </AvatarFallback>
         </Avatar>
-        <Link href="/" className="hover:underline">
+        <button
+          onClick={handleLogout}
+          className="hover:underline text-left text-inherit bg-transparent border-none p-0 cursor-pointer"
+        >
           Logout
-        </Link>
+        </button>
         <LightDarckToggle className="ml-auto" />
       </footer>
     </nav>
